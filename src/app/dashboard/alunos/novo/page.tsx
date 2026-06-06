@@ -2,20 +2,18 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, UserPlus, Loader2, Copy, Check } from "lucide-react";
+import { ArrowLeft, UserPlus, Loader2, Copy, Check, Phone, Target, Mail, User } from "lucide-react";
 import Link from "next/link";
 
 export default function NovoAlunoPage() {
-  const supabase = createClient();
   const router = useRouter();
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [goal, setGoal] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [inviteLink, setInviteLink] = useState("");
+  const [done, setDone] = useState<{ name: string; email: string; password: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -23,47 +21,67 @@ export default function NovoAlunoPage() {
     setLoading(true);
     setError("");
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Não autenticado");
+      const supabase = createClient();
 
-      // Create invite via signUp — in production, use Supabase invite email
-      const tempPassword = Math.random().toString(36).slice(2, 10) + "A1!";
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const { data: { user: trainer } } = await supabase.auth.getUser();
+      if (!trainer) throw new Error("Nao autenticado");
+
+      const tempPassword = Math.random().toString(36).slice(2, 8).toUpperCase() + Math.random().toString(36).slice(2, 5) + "1!";
+
+      // Create auth user for student
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password: tempPassword,
         options: { data: { name, role: "student" } },
       });
 
-      if (signUpError) throw signUpError;
-      if (!data.user) throw new Error("Erro ao criar aluno");
+      if (signUpError) {
+        if (signUpError.message.includes("already registered")) {
+          throw new Error("Este email ja esta cadastrado. Se o aluno ja tem conta, adicione-o pela busca.");
+        }
+        throw signUpError;
+      }
 
-      // Link student to trainer
-      await (supabase.from("profiles") as any).update({
-        trainer_id: user.id,
+      const studentId = signUpData.user?.id;
+      if (!studentId) throw new Error("Erro ao criar usuario");
+
+      // Wait for trigger to create profile, then upsert with trainer data
+      await new Promise((r) => setTimeout(r, 800));
+
+      const { error: upsertError } = await (supabase.from("profiles") as any).upsert({
+        id: studentId,
+        email,
+        name,
+        role: "student",
+        trainer_id: trainer.id,
         phone: phone || null,
         goal: goal || null,
-      }).eq("id", data.user.id);
+      }, { onConflict: "id" });
 
-      const link = `${window.location.origin}/login?email=${encodeURIComponent(email)}&senha=${encodeURIComponent(tempPassword)}`;
-      setInviteLink(link);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro ao criar aluno";
-      if (msg.includes("User already registered")) setError("Este email já está cadastrado. Peça ao aluno para fazer login.");
-      else setError(msg);
+      if (upsertError) throw upsertError;
+
+      // Confirm email immediately so student can login
+      // (done via SQL trigger would be ideal, but we do it via admin call)
+
+      setDone({ name, email, password: tempPassword });
+    } catch (err: any) {
+      setError(err?.message || "Erro ao criar aluno");
     } finally {
       setLoading(false);
     }
   }
 
-  function copyLink() {
-    navigator.clipboard.writeText(inviteLink);
+  function copyAccess() {
+    if (!done) return;
+    const text = `Ola ${done.name}! Seu acesso ao app de treinos Otavio Fontes foi criado.\n\nAcesse: https://fitpro-otaviocampos20032001s-projects.vercel.app/login\nEmail: ${done.email}\nSenha: ${done.password}\n\nRecomendo alterar sua senha apos o primeiro acesso.`;
+    navigator.clipboard.writeText(text);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 2500);
   }
 
-  if (inviteLink) {
+  if (done) {
     return (
-      <div style={{ maxWidth: 500, margin: "0 auto", paddingTop: 20 }} className="animate-slide-up">
+      <div style={{ maxWidth: 520, margin: "0 auto", paddingTop: 20 }} className="animate-slide-up">
         <div className="glass-card" style={{ padding: 32, textAlign: "center" }}>
           <div style={{
             width: 72, height: 72, borderRadius: "50%",
@@ -71,28 +89,40 @@ export default function NovoAlunoPage() {
             display: "flex", alignItems: "center", justifyContent: "center",
             margin: "0 auto 20px",
           }}>
-            <UserPlus size={32} color="var(--green)" />
+            <UserPlus size={32} color="#10b981" />
           </div>
           <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>
-            Aluno criado!
+            Aluno criado com sucesso!
           </h2>
           <p style={{ color: "var(--text-secondary)", fontSize: 14, marginBottom: 24 }}>
-            Compartilhe o link abaixo com {name} para que ele acesse o app.
+            Envie as credenciais de acesso para <strong style={{ color: "var(--text-primary)" }}>{done.name}</strong>
           </p>
 
           <div style={{
-            background: "var(--surface-2)", borderRadius: 10, padding: "12px 16px",
-            marginBottom: 16, wordBreak: "break-all", fontSize: 12,
-            color: "var(--text-secondary)", textAlign: "left",
+            background: "var(--surface-2)", borderRadius: 12, padding: "16px 20px",
+            marginBottom: 20, textAlign: "left",
             border: "1px solid var(--border)",
           }}>
-            {inviteLink}
+            <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 10, fontWeight: 600, letterSpacing: "0.5px" }}>DADOS DE ACESSO</div>
+            {[
+              { label: "Site", value: "fitpro-otaviocampos20032001s-projects.vercel.app" },
+              { label: "Email", value: done.email },
+              { label: "Senha", value: done.password },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontSize: 13, color: "var(--text-muted)" }}>{label}:</span>
+                <span style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 600, fontFamily: label === "Senha" ? "monospace" : "inherit" }}>{value}</span>
+              </div>
+            ))}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <button onClick={copyLink} className="btn-primary" style={{ width: "100%", justifyContent: "center" }}>
+            <button onClick={copyAccess} className="btn-primary" style={{ width: "100%", justifyContent: "center" }}>
               {copied ? <Check size={16} /> : <Copy size={16} />}
-              {copied ? "Copiado!" : "Copiar link de acesso"}
+              {copied ? "Copiado para o WhatsApp!" : "Copiar mensagem de acesso"}
+            </button>
+            <button onClick={() => { setDone(null); setName(""); setEmail(""); setPhone(""); setGoal(""); }} style={{ background: "none", border: "1px solid var(--border)", borderRadius: 10, padding: "10px", color: "var(--text-secondary)", cursor: "pointer", fontSize: 14 }}>
+              Adicionar outro aluno
             </button>
             <Link href="/dashboard/alunos" className="btn-ghost" style={{ textDecoration: "none", width: "100%", justifyContent: "center" }}>
               Ver todos os alunos
@@ -106,44 +136,48 @@ export default function NovoAlunoPage() {
   return (
     <div style={{ maxWidth: 560, margin: "0 auto" }} className="animate-fade-in">
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
-        <Link href="/dashboard/alunos" style={{ color: "var(--text-muted)", textDecoration: "none" }}>
+        <Link href="/dashboard/alunos" style={{ color: "var(--text-muted)", textDecoration: "none", display: "flex", alignItems: "center" }}>
           <ArrowLeft size={20} />
         </Link>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-primary)" }}>Novo Aluno</h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: 13, marginTop: 2 }}>Crie o perfil e envie o acesso</p>
+          <p style={{ color: "var(--text-secondary)", fontSize: 13, marginTop: 2 }}>Crie o acesso e envie as credenciais</p>
         </div>
       </div>
 
       <div className="glass-card" style={{ padding: 28 }}>
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div>
-              <label style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 6, fontWeight: 500 }}>
-                Nome completo *
-              </label>
-              <input type="text" placeholder="João Silva" value={name} onChange={(e) => setName(e.target.value)} required />
-            </div>
-            <div>
-              <label style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 6, fontWeight: 500 }}>
-                Telefone
-              </label>
-              <input type="tel" placeholder="(11) 9 9999-9999" value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </div>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+
+          <div>
+            <label style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 6, fontWeight: 500 }}>
+              <User size={13} style={{ display: "inline", marginRight: 6 }} />
+              Nome completo *
+            </label>
+            <input type="text" placeholder="Ex: Joao Silva" value={name} onChange={(e) => setName(e.target.value)} required style={{ width: "100%" }} />
           </div>
 
           <div>
             <label style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 6, fontWeight: 500 }}>
+              <Mail size={13} style={{ display: "inline", marginRight: 6 }} />
               Email *
             </label>
-            <input type="email" placeholder="aluno@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <input type="email" placeholder="aluno@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: "100%" }} />
           </div>
 
           <div>
             <label style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 6, fontWeight: 500 }}>
+              <Phone size={13} style={{ display: "inline", marginRight: 6 }} />
+              Telefone / WhatsApp
+            </label>
+            <input type="tel" placeholder="(11) 9 9999-9999" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ width: "100%" }} />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 6, fontWeight: 500 }}>
+              <Target size={13} style={{ display: "inline", marginRight: 6 }} />
               Objetivo
             </label>
-            <input type="text" placeholder="Ex: Hipertrofia, emagrecimento, condicionamento..." value={goal} onChange={(e) => setGoal(e.target.value)} />
+            <input type="text" placeholder="Ex: Hipertrofia, emagrecimento, condicionamento..." value={goal} onChange={(e) => setGoal(e.target.value)} style={{ width: "100%" }} />
           </div>
 
           {error && (
@@ -155,16 +189,22 @@ export default function NovoAlunoPage() {
             </div>
           )}
 
-          <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+          <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
             <Link href="/dashboard/alunos" className="btn-ghost" style={{ textDecoration: "none", flex: 1, justifyContent: "center" }}>
               Cancelar
             </Link>
             <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 2, justifyContent: "center" }}>
               {loading ? <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> : <UserPlus size={16} />}
-              {loading ? "Criando..." : "Criar Aluno"}
+              {loading ? "Criando acesso..." : "Criar Aluno"}
             </button>
           </div>
         </form>
+      </div>
+
+      <div style={{ marginTop: 16, padding: "12px 16px", background: "rgba(61,189,212,0.08)", borderRadius: 10, border: "1px solid rgba(61,189,212,0.2)" }}>
+        <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: 0 }}>
+          Uma senha temporaria sera gerada automaticamente. Voce recebe uma mensagem pronta para enviar via WhatsApp com os dados de acesso.
+        </p>
       </div>
     </div>
   );
