@@ -38,7 +38,7 @@ export default function NovoAlunoPage() {
       if (!data.user) throw new Error("Erro ao criar aluno");
 
       // Link student to trainer
-      await supabase.from("profiles").update({
+      await (supabase.from("profiles") as any).update({
         trainer_id: user.id,
         phone: phone || null,
         goal: goal || null,
