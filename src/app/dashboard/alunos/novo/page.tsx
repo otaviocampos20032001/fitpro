@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, UserPlus, Loader2, Copy, Check, Phone, Target, Mail, User } from "lucide-react";
 import Link from "next/link";
@@ -28,8 +29,14 @@ export default function NovoAlunoPage() {
 
       const tempPassword = Math.random().toString(36).slice(2, 8).toUpperCase() + Math.random().toString(36).slice(2, 5) + "1!";
 
-      // Create auth user for student
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      // Use a separate client (no session persistence) so trainer session is NOT replaced
+      const anonClient = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { auth: { persistSession: false } }
+      );
+
+      const { data: signUpData, error: signUpError } = await anonClient.auth.signUp({
         email,
         password: tempPassword,
         options: { data: { name, role: "student" } },
