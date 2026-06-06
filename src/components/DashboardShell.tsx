@@ -9,6 +9,19 @@ interface Profile {
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("sidebar-collapsed");
+    if (saved === "true") setCollapsed(true);
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((v) => {
+      localStorage.setItem("sidebar-collapsed", String(!v));
+      return !v;
+    });
+  }
 
   useEffect(() => {
     const supabase = createClient();
@@ -22,11 +35,25 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     });
   }, []);
 
+  const sidebarWidth = collapsed ? 64 : 256;
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--background)" }}>
-      <Sidebar profile={profile} />
-      <main style={{ flex: 1, padding: "24px", overflowY: "auto" }} className="md:ml-64 mt-14 md:mt-0">
-        {children}
+      <Sidebar profile={profile} collapsed={collapsed} onToggleCollapse={toggleCollapsed} />
+      <main
+        style={{
+          flex: 1,
+          padding: "24px",
+          overflowY: "auto",
+          transition: "margin-left 0.25s ease",
+        }}
+        className="mt-14 md:mt-0"
+        // inline style for dynamic margin on desktop
+      >
+        <style>{`@media (min-width: 768px) { .dashboard-main { margin-left: ${sidebarWidth}px; } }`}</style>
+        <div className="dashboard-main" style={{ minHeight: "100%" }}>
+          {children}
+        </div>
       </main>
     </div>
   );
