@@ -7,6 +7,7 @@ import {
   ClipboardList, LogOut, Menu, X, Bell, ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
+import OFLogo from "@/components/OFLogo";
 
 interface Profile {
   id: string;
@@ -63,15 +64,11 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: "linear-gradient(135deg, #7c3aed, #6366f1)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0,
-          }}>
-            <Dumbbell size={18} color="white" />
+          <OFLogo size={36} color="#3DBDD4" />
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text-primary)", letterSpacing: "0.3px" }}>OTAVIO FONTES</div>
+            <div style={{ fontSize: 9, color: "var(--accent)", letterSpacing: "1.2px", textTransform: "uppercase" }}>Personal & Consultoria</div>
           </div>
-          <span style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>FitPro</span>
         </Link>
         <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }} className="md:hidden">
           <X size={20} />
@@ -82,8 +79,8 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
       <div style={{ padding: "12px 20px" }}>
         <span style={{
           fontSize: 11, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase",
-          color: profile?.role === "trainer" ? "var(--accent-light)" : "var(--green)",
-          background: profile?.role === "trainer" ? "rgba(124,58,237,0.15)" : "rgba(16,185,129,0.15)",
+          color: "var(--accent)",
+          background: "rgba(61,189,212,0.12)",
           padding: "4px 10px", borderRadius: 6,
         }}>
           {profile?.role === "trainer" ? "Personal Trainer" : "Aluno"}
@@ -103,12 +100,13 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
                 display: "flex", alignItems: "center", gap: 12,
                 padding: "10px 12px", borderRadius: 10,
                 textDecoration: "none",
-                color: active ? "white" : "var(--text-secondary)",
-                background: active ? "linear-gradient(135deg, var(--accent), #6366f1)" : "transparent",
+                color: active ? "var(--accent)" : "var(--text-secondary)",
+                background: active ? "rgba(61,189,212,0.15)" : "transparent",
                 fontWeight: active ? 600 : 400,
                 fontSize: 14,
                 transition: "all 0.15s",
-                boxShadow: active ? "0 2px 12px var(--accent-glow)" : "none",
+                boxShadow: active ? "none" : "none",
+          borderLeft: active ? "2px solid var(--accent)" : "2px solid transparent",
               }}
               onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "var(--surface-2)"; }}
               onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
@@ -145,7 +143,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
       }}>
         <div style={{
           width: 36, height: 36, borderRadius: "50%",
-          background: "linear-gradient(135deg, var(--accent), #6366f1)",
+          background: "linear-gradient(135deg, var(--accent), var(--accent-dark))",
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 13, fontWeight: 700, color: "white", flexShrink: 0,
         }}>
@@ -187,10 +185,10 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
           <Menu size={22} />
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, #7c3aed, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Dumbbell size={14} color="white" />
+          <OFLogo size={28} color="#3DBDD4" />
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)", letterSpacing: "0.3px" }}>OTAVIO FONTES</div>
           </div>
-          <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>FitPro</span>
         </div>
       </div>
 

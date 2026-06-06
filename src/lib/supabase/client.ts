@@ -5,34 +5,19 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: {
-        get(name) {
-          if (typeof document === "undefined") return undefined;
-          const match = document.cookie
-            .split("; ")
-            .find((row) => row.startsWith(`${name}=`));
-          if (!match) return undefined;
-          try {
-            return decodeURIComponent(match.split("=").slice(1).join("="));
-          } catch {
-            return match.split("=").slice(1).join("=");
+      global: {
+        fetch: (url: RequestInfo | URL, init?: RequestInit) => {
+          if (init?.headers) {
+            const sanitized: Record<string, string> = {};
+            new Headers(init.headers as HeadersInit).forEach((value, key) => {
+              // Remove any character above Latin-1 range (> U+00FF)
+              sanitized[key] = value.replace(/[^\x00-\xFF]/g, (c) =>
+                encodeURIComponent(c)
+              );
+            });
+            init = { ...init, headers: sanitized };
           }
-        },
-        set(name, value, options) {
-          if (typeof document === "undefined") return;
-          let cookie = `${name}=${encodeURIComponent(value)}`;
-          if (options?.maxAge) cookie += `; Max-Age=${options.maxAge}`;
-          if (options?.path) cookie += `; Path=${options.path}`;
-          if (options?.domain) cookie += `; Domain=${options.domain}`;
-          if (options?.sameSite) cookie += `; SameSite=${options.sameSite}`;
-          if (options?.secure) cookie += `; Secure`;
-          document.cookie = cookie;
-        },
-        remove(name, options) {
-          if (typeof document === "undefined") return;
-          let cookie = `${name}=; Max-Age=0`;
-          if (options?.path) cookie += `; Path=${options.path}`;
-          document.cookie = cookie;
+          return fetch(url, init);
         },
       },
     }

@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { Users, TrendingUp, Flame, AlertCircle, Plus, ChevronRight, Clock } from "lucide-react";
+import OFLogo from "@/components/OFLogo";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -41,10 +42,10 @@ export default function TrainerDashboard({
   });
 
   const stats = [
-    { label: "Total de Alunos", value: students.length, icon: Users, color: "#7c3aed", bg: "rgba(124,58,237,0.15)" },
-    { label: "Treinaram Hoje", value: trainedToday, icon: Flame, color: "#10b981", bg: "rgba(16,185,129,0.15)" },
-    { label: "Esta Semana", value: trainedThisWeek, icon: TrendingUp, color: "#3b82f6", bg: "rgba(59,130,246,0.15)" },
-    { label: "Inativos (+5 dias)", value: inactive.length, icon: AlertCircle, color: "#f59e0b", bg: "rgba(245,158,11,0.15)" },
+    { label: "Total de Alunos", value: students.length, icon: Users, color: "#3DBDD4", bg: "rgba(61,189,212,0.12)" },
+    { label: "Treinaram Hoje", value: trainedToday, icon: Flame, color: "#10b981", bg: "rgba(16,185,129,0.12)" },
+    { label: "Esta Semana", value: trainedThisWeek, icon: TrendingUp, color: "#3b82f6", bg: "rgba(59,130,246,0.12)" },
+    { label: "Inativos (+5 dias)", value: inactive.length, icon: AlertCircle, color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
   ];
 
   const firstName = profile.name.split(" ")[0];
@@ -170,7 +171,7 @@ export default function TrainerDashboard({
                       <div style={{ position: "relative" }}>
                         <div style={{
                           width: 36, height: 36, borderRadius: "50%",
-                          background: "linear-gradient(135deg, #3b82f6, #7c3aed)",
+                          background: "linear-gradient(135deg, #3DBDD4, #2a9fb5)",
                           display: "flex", alignItems: "center", justifyContent: "center",
                           fontSize: 13, fontWeight: 700, color: "white",
                         }}>

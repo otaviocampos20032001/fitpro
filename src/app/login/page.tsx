@@ -3,7 +3,8 @@ export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { Dumbbell, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import OFLogo from "@/components/OFLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,13 +23,10 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.push("/dashboard");
-        router.refresh();
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -36,13 +34,13 @@ export default function LoginPage() {
           options: { data: { name, role } },
         });
         if (error) throw error;
-        router.push("/dashboard");
-        router.refresh();
       }
+      router.push("/dashboard");
+      router.refresh();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro ao autenticar";
       if (msg.includes("Invalid login credentials")) setError("Email ou senha incorretos");
-      else if (msg.includes("User already registered")) setError("Este email já está cadastrado");
+      else if (msg.includes("User already registered")) setError("Este email ja esta cadastrado");
       else setError(msg);
     } finally {
       setLoading(false);
@@ -50,67 +48,63 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      style={{ minHeight: "100vh", display: "flex", background: "var(--background)" }}
-    >
-      {/* Left Panel — branding */}
-      <div
-        style={{
-          flex: 1,
-          display: "none",
-          flexDirection: "column",
-          justifyContent: "center",
-          padding: "60px",
-          background: "linear-gradient(135deg, #1a0a3a 0%, #0a0a1f 50%, #0d1a0d 100%)",
-          position: "relative",
-          overflow: "hidden",
-        }}
-        className="md:flex"
-      >
-        {/* Background circles */}
+    <div style={{ minHeight: "100vh", display: "flex", background: "var(--background)" }}>
+
+      {/* Left Panel */}
+      <div style={{
+        flex: 1, display: "none", flexDirection: "column",
+        justifyContent: "center", padding: "60px",
+        background: "linear-gradient(160deg, #0d1a1e 0%, #0a0a0a 60%)",
+        position: "relative", overflow: "hidden",
+      }} className="md:flex">
+        {/* Background glow */}
         <div style={{
-          position: "absolute", top: "10%", left: "10%",
-          width: 300, height: 300, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 70%)",
+          position: "absolute", top: "15%", left: "5%",
+          width: 320, height: 320, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(61,189,212,0.12) 0%, transparent 70%)",
           pointerEvents: "none",
         }} />
         <div style={{
-          position: "absolute", bottom: "15%", right: "5%",
-          width: 200, height: 200, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)",
+          position: "absolute", bottom: "10%", right: "0%",
+          width: 240, height: 240, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(61,189,212,0.07) 0%, transparent 70%)",
           pointerEvents: "none",
         }} />
 
+        {/* Brand */}
         <div style={{ position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 48 }}>
-            <div style={{
-              width: 48, height: 48, borderRadius: 14,
-              background: "linear-gradient(135deg, #7c3aed, #6366f1)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <Dumbbell size={24} color="white" />
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 52 }}>
+            <OFLogo size={52} color="#3DBDD4" />
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "0.5px" }}>
+                OTAVIO FONTES
+              </div>
+              <div style={{ fontSize: 11, color: "var(--accent)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 2 }}>
+                Personal e Consultoria-ON
+              </div>
             </div>
-            <span style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)" }}>FitPro</span>
           </div>
 
-          <h1 style={{ fontSize: 42, fontWeight: 800, lineHeight: 1.2, color: "var(--text-primary)", marginBottom: 20 }}>
-            Treinos que<br />
-            <span className="gradient-text">transformam</span>
+          <h1 style={{ fontSize: 40, fontWeight: 800, lineHeight: 1.2, color: "#fff", marginBottom: 20 }}>
+            Transforme seus<br />
+            <span className="gradient-text">resultados</span>
           </h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: 16, lineHeight: 1.7, maxWidth: 360 }}>
-            Plataforma completa para personal trainers prescreverem, acompanharem e evoluírem seus alunos.
+          <p style={{ color: "var(--text-secondary)", fontSize: 15, lineHeight: 1.8, maxWidth: 360 }}>
+            Plataforma exclusiva para acompanhar seus treinos, evoluir suas cargas e atingir seus objetivos.
           </p>
 
-          {/* Stats */}
-          <div style={{ display: "flex", gap: 40, marginTop: 56 }}>
+          {/* Divider */}
+          <div style={{ width: 48, height: 3, background: "var(--accent)", borderRadius: 2, margin: "36px 0" }} />
+
+          <div style={{ display: "flex", gap: 40 }}>
             {[
-              { value: "100+", label: "Exercícios" },
-              { value: "∞", label: "Alunos" },
+              { value: "50+", label: "Exercicios" },
+              { value: "100%", label: "Personalizado" },
               { value: "PRs", label: "Rastreados" },
             ].map((s) => (
               <div key={s.label}>
-                <div style={{ fontSize: 28, fontWeight: 800, color: "var(--accent-light)" }}>{s.value}</div>
-                <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{s.label}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "var(--accent)" }}>{s.value}</div>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 3, letterSpacing: "0.5px" }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -121,68 +115,50 @@ export default function LoginPage() {
       <div style={{
         flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
         padding: "40px 24px",
+        borderLeft: "1px solid var(--border-subtle)",
       }}>
         <div style={{ width: "100%", maxWidth: 400 }}>
-          {/* Mobile logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 40 }} className="md:hidden">
-            <div style={{
-              width: 40, height: 40, borderRadius: 12,
-              background: "linear-gradient(135deg, #7c3aed, #6366f1)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <Dumbbell size={20} color="white" />
+          {/* Mobile brand */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40 }} className="md:hidden">
+            <OFLogo size={40} color="#3DBDD4" />
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "#fff" }}>OTAVIO FONTES</div>
+              <div style={{ fontSize: 10, color: "var(--accent)", letterSpacing: "1.5px" }}>PERSONAL E CONSULTORIA-ON</div>
             </div>
-            <span style={{ fontSize: 20, fontWeight: 700 }}>FitPro</span>
           </div>
 
-          <h2 style={{ fontSize: 26, fontWeight: 700, marginBottom: 8, color: "var(--text-primary)" }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 6, color: "var(--text-primary)" }}>
             {mode === "login" ? "Bem-vindo de volta" : "Criar conta"}
           </h2>
           <p style={{ color: "var(--text-secondary)", marginBottom: 32, fontSize: 14 }}>
-            {mode === "login"
-              ? "Entre com seus dados para continuar"
-              : "Preencha seus dados para começar"}
+            {mode === "login" ? "Entre para acessar sua plataforma" : "Preencha os dados para comecar"}
           </p>
 
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {mode === "signup" && (
               <>
                 <div>
-                  <label style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 6, display: "block", fontWeight: 500 }}>
+                  <label style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 6, display: "block", fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase" }}>
                     Nome completo
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Seu nome"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
+                  <input type="text" placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} required />
                 </div>
-
                 <div>
-                  <label style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 8, display: "block", fontWeight: 500 }}>
+                  <label style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 8, display: "block", fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase" }}>
                     Tipo de conta
                   </label>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                     {(["student", "trainer"] as const).map((r) => (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => setRole(r)}
-                        style={{
-                          padding: "12px",
-                          borderRadius: 12,
-                          border: `2px solid ${role === r ? "var(--accent)" : "var(--border)"}`,
-                          background: role === r ? "rgba(124,58,237,0.15)" : "var(--surface-2)",
-                          color: role === r ? "var(--accent-light)" : "var(--text-secondary)",
-                          cursor: "pointer",
-                          fontWeight: 600,
-                          fontSize: 13,
-                          transition: "all 0.2s",
-                        }}
-                      >
-                        {r === "student" ? "🏋️ Aluno" : "👨‍🏫 Personal"}
+                      <button key={r} type="button" onClick={() => setRole(r)} style={{
+                        padding: "12px",
+                        borderRadius: 10,
+                        border: `2px solid ${role === r ? "var(--accent)" : "var(--border)"}`,
+                        background: role === r ? "rgba(61,189,212,0.12)" : "var(--surface-2)",
+                        color: role === r ? "var(--accent)" : "var(--text-secondary)",
+                        cursor: "pointer", fontWeight: 700, fontSize: 13,
+                        transition: "all 0.2s",
+                      }}>
+                        {r === "student" ? "Aluno" : "Personal"}
                       </button>
                     ))}
                   </div>
@@ -191,72 +167,51 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 6, display: "block", fontWeight: 500 }}>
+              <label style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 6, display: "block", fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase" }}>
                 Email
               </label>
               <div style={{ position: "relative" }}>
-                <Mail size={16} color="var(--text-muted)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                <input
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  style={{ paddingLeft: 40 }}
-                />
+                <Mail size={15} color="var(--text-muted)" style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                <input type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ paddingLeft: 40 }} />
               </div>
             </div>
 
             <div>
-              <label style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 6, display: "block", fontWeight: 500 }}>
+              <label style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 6, display: "block", fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase" }}>
                 Senha
               </label>
               <div style={{ position: "relative" }}>
-                <Lock size={16} color="var(--text-muted)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  style={{ paddingLeft: 40, paddingRight: 44 }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-                    background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)",
-                    padding: 4,
-                  }}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                <Lock size={15} color="var(--text-muted)" style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                <input type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} style={{ paddingLeft: 40, paddingRight: 44 }} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{
+                  position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                  background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 4,
+                }}>
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
 
             {error && (
               <div style={{
-                background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)",
+                background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)",
                 borderRadius: 10, padding: "10px 14px", color: "#ef4444", fontSize: 13,
               }}>
                 {error}
               </div>
             )}
 
-            <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: 8, width: "100%", justifyContent: "center", fontSize: 15 }}>
-              {loading ? <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> : null}
+            <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: 8, width: "100%", justifyContent: "center", fontSize: 15, padding: "14px" }}>
+              {loading && <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />}
               {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
             </button>
           </form>
 
           <p style={{ textAlign: "center", marginTop: 24, fontSize: 14, color: "var(--text-secondary)" }}>
-            {mode === "login" ? "Não tem conta?" : "Já tem conta?"}{" "}
-            <button
-              onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}
-              style={{ background: "none", border: "none", color: "var(--accent-light)", cursor: "pointer", fontWeight: 600 }}
-            >
+            {mode === "login" ? "Nao tem conta?" : "Ja tem conta?"}{" "}
+            <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }} style={{
+              background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontWeight: 700,
+            }}>
               {mode === "login" ? "Criar agora" : "Entrar"}
             </button>
           </p>

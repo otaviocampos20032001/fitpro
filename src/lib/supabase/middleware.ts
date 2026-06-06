@@ -10,20 +10,15 @@ export async function updateSession(request: NextRequest) {
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll().map((c) => ({
-            name: c.name,
-            value: (() => {
-              try { return decodeURIComponent(c.value); } catch { return c.value; }
-            })(),
-          }));
+          return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, encodeURIComponent(value))
+            request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, encodeURIComponent(value), options)
+            supabaseResponse.cookies.set(name, value, options)
           );
         },
       },
@@ -35,7 +30,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const url = request.nextUrl.clone();
-  const isAuthPage = url.pathname.startsWith("/login") || url.pathname.startsWith("/cadastro");
+  const isAuthPage = url.pathname.startsWith("/login");
   const isPublicPage = url.pathname === "/";
 
   if (!user && !isAuthPage && !isPublicPage) {

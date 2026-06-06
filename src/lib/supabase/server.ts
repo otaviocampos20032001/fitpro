@@ -9,17 +9,12 @@ export async function createClient() {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll().map((c) => ({
-            name: c.name,
-            value: (() => {
-              try { return decodeURIComponent(c.value); } catch { return c.value; }
-            })(),
-          }));
+          return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, encodeURIComponent(value), options)
+              cookieStore.set(name, value, options)
             );
           } catch {}
         },
