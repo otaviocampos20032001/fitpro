@@ -12,12 +12,11 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) return;
-      const { data } = await supabase
-        .from("profiles")
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await (supabase.from("profiles") as any)
         .select("*")
-        .eq("id", session.user.id)
+        .eq("id", user.id)
         .single();
       setProfile(data);
     });

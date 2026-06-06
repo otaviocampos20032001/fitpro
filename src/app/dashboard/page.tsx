@@ -7,17 +7,19 @@ import StudentDashboard from "@/components/StudentDashboard";
 
 export default function DashboardPage() {
   const [data, setData] = useState<{ profile: unknown; students: unknown[]; recentSessions: unknown[]; prs: unknown[]; activePlan: unknown } | null>(null);
+  const [dbError, setDbError] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
     (async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
-        const uid = session.user.id;
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) return;
+        const uid = user.id;
 
-        const { data: profile } = await (supabase.from("profiles") as any).select("*").eq("id", uid).single();
-        if (!profile) {
+        const { data: profile, error: profileError } = await (supabase.from("profiles") as any).select("*").eq("id", uid).single();
+        if (profileError || !profile) {
+          setDbError(`Erro ao buscar perfil: ${profileError?.message || "perfil nao encontrado"} (uid: ${uid})`);
           setData({ profile: null, students: [], recentSessions: [], prs: [], activePlan: null });
           return;
         }
@@ -35,8 +37,8 @@ export default function DashboardPage() {
           const { data: prs } = await (supabase.from("personal_records") as any).select("*, exercises(name)").eq("student_id", uid).order("achieved_at", { ascending: false }).limit(5);
           setData({ profile, students: [], recentSessions: recentSessions || [], prs: prs || [], activePlan });
         }
-      } catch (e) {
-        console.error("Dashboard load error:", e);
+      } catch (e: any) {
+        setDbError(`Excecao: ${e?.message || String(e)}`);
         setData({ profile: null, students: [], recentSessions: [], prs: [], activePlan: null });
       }
     })();
@@ -55,7 +57,8 @@ export default function DashboardPage() {
   if (!profile) {
     return (
       <div style={{ textAlign: "center", paddingTop: 80 }}>
-        <p style={{ color: "var(--text-secondary)" }}>Erro ao carregar perfil. Tente recarregar a pagina.</p>
+        <p style={{ color: "var(--text-secondary)", marginBottom: 8 }}>Erro ao carregar perfil. Tente recarregar a pagina.</p>
+        {dbError && <p style={{ color: "#ef4444", fontSize: 12, fontFamily: "monospace", maxWidth: 600, margin: "0 auto", wordBreak: "break-all" }}>{dbError}</p>}
       </div>
     );
   }
