@@ -87,7 +87,7 @@ export default function ActiveWorkout({
   };
 
   async function startWorkout() {
-    const { data } = await supabase.from("workout_sessions").insert({
+    const { data } = await (supabase.from("workout_sessions") as any).insert({
       student_id: studentId,
       plan_id: plan?.id,
       day_id: currentDay?.id,
@@ -179,7 +179,7 @@ export default function ActiveWorkout({
             });
             if (s.isPR && s.weight > 0) {
               const oneRepMax = s.weight * (1 + s.reps / 30);
-              await supabase.from("personal_records").upsert({
+              await (supabase.from("personal_records") as any).upsert({
                 student_id: studentId,
                 exercise_id: de.exercise_id,
                 weight: s.weight,
@@ -193,9 +193,9 @@ export default function ActiveWorkout({
         }
       }
       if (setsToInsert.length > 0) {
-        await supabase.from("session_sets").insert(setsToInsert);
+        await (supabase.from("session_sets") as any).insert(setsToInsert);
       }
-      await supabase.from("workout_sessions").update({
+      await (supabase.from("workout_sessions") as any).update({
         status: "completed",
         finished_at: new Date().toISOString(),
         duration_minutes: Math.floor(elapsed / 60),

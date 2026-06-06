@@ -15,10 +15,10 @@ export default function DashboardPage() {
       if (!session) return;
       const uid = session.user.id;
 
-      const { data: profile } = await supabase.from("profiles").select("*").eq("id", uid).single();
+      const { data: profile } = await (supabase.from("profiles") as any).select("*").eq("id", uid).single();
       if (!profile) return;
 
-      if (profile.role === "trainer") {
+      if ((profile as any).role === "trainer") {
         const { data: students } = await supabase.from("profiles").select("*").eq("trainer_id", uid).eq("active", true).order("name");
         const ids = (students || []).map((s: { id: string }) => s.id);
         const { data: recentSessions } = ids.length
