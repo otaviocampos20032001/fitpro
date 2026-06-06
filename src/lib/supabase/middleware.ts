@@ -10,15 +10,20 @@ export async function updateSession(request: NextRequest) {
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll();
+          return request.cookies.getAll().map((c) => ({
+            name: c.name,
+            value: (() => {
+              try { return decodeURIComponent(c.value); } catch { return c.value; }
+            })(),
+          }));
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
+            request.cookies.set(name, encodeURIComponent(value))
           );
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, encodeURIComponent(value), options)
           );
         },
       },
