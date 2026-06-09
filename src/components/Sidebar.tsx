@@ -272,8 +272,8 @@ export default function Sidebar({
       {open && (
         <>
           <div onClick={() => setOpen(false)}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 49, backdropFilter: "blur(6px)" }} />
-          <div><SidebarContent /></div>
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 49 }} />
+          <SidebarContent />
         </>
       )}
 
