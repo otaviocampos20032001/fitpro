@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, UserPlus, Loader2, Copy, Check, Phone, Target, Mail, User } from "lucide-react";
 import Link from "next/link";
@@ -23,54 +22,23 @@ export default function NovoAlunoPage() {
     setError("");
     try {
       const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Nao autenticado");
 
-      const { data: { user: trainer } } = await supabase.auth.getUser();
-      if (!trainer) throw new Error("Nao autenticado");
-
-      const tempPassword = Math.random().toString(36).slice(2, 8).toUpperCase() + Math.random().toString(36).slice(2, 5) + "1!";
-
-      // Use a separate client (no session persistence) so trainer session is NOT replaced
-      const anonClient = createSupabaseClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { auth: { persistSession: false } }
+      const { data: result, error: rpcError } = await (supabase.rpc as any)(
+        "create_student_account",
+        {
+          p_trainer_id: session.user.id,
+          p_email: email,
+          p_name: name,
+          p_phone: phone || null,
+          p_goal: goal || null,
+        }
       );
 
-      const { data: signUpData, error: signUpError } = await anonClient.auth.signUp({
-        email,
-        password: tempPassword,
-        options: { data: { name, role: "student" } },
-      });
+      if (rpcError) throw new Error(rpcError.message);
 
-      if (signUpError) {
-        if (signUpError.message.includes("already registered")) {
-          throw new Error("Este email ja esta cadastrado. Se o aluno ja tem conta, adicione-o pela busca.");
-        }
-        throw signUpError;
-      }
-
-      const studentId = signUpData.user?.id;
-      if (!studentId) throw new Error("Erro ao criar usuario");
-
-      // Wait for trigger to create profile, then upsert with trainer data
-      await new Promise((r) => setTimeout(r, 800));
-
-      const { error: upsertError } = await (supabase.from("profiles") as any).upsert({
-        id: studentId,
-        email,
-        name,
-        role: "student",
-        trainer_id: trainer.id,
-        phone: phone || null,
-        goal: goal || null,
-      }, { onConflict: "id" });
-
-      if (upsertError) throw upsertError;
-
-      // Confirm email immediately so student can login
-      // (done via SQL trigger would be ideal, but we do it via admin call)
-
-      setDone({ name, email, password: tempPassword });
+      setDone({ name, email, password: (result as any).tempPassword });
     } catch (err: any) {
       setError(err?.message || "Erro ao criar aluno");
     } finally {

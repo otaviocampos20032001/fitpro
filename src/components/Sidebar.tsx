@@ -18,30 +18,34 @@ interface Profile {
 }
 
 const trainerLinks = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/alunos", label: "Alunos", icon: Users },
-  { href: "/dashboard/fichas", label: "Fichas de Treino", icon: ClipboardList },
-  { href: "/dashboard/exercicios", label: "Exercícios", icon: Dumbbell },
-  { href: "/dashboard/relatorios", label: "Relatórios", icon: TrendingUp },
+  { href: "/dashboard",            label: "Dashboard",        icon: LayoutDashboard },
+  { href: "/dashboard/alunos",     label: "Alunos",           icon: Users },
+  { href: "/dashboard/fichas",     label: "Fichas de Treino", icon: ClipboardList },
+  { href: "/dashboard/exercicios", label: "Exercícios",       icon: Dumbbell },
+  { href: "/dashboard/relatorios", label: "Relatórios",       icon: TrendingUp },
 ];
 
 const studentLinks = [
-  { href: "/dashboard", label: "Início", icon: LayoutDashboard },
-  { href: "/dashboard/treino", label: "Treino de Hoje", icon: Dumbbell },
-  { href: "/dashboard/historico", label: "Histórico", icon: ClipboardList },
-  { href: "/dashboard/evolucao", label: "Evolução", icon: TrendingUp },
+  { href: "/dashboard",           label: "Início",      icon: LayoutDashboard },
+  { href: "/dashboard/treino",    label: "Treino Hoje", icon: Dumbbell },
+  { href: "/dashboard/historico", label: "Histórico",   icon: ClipboardList },
+  { href: "/dashboard/evolucao",  label: "Evolução",    icon: TrendingUp },
 ];
 
-export default function Sidebar({ profile, collapsed, onToggleCollapse }: {
+export default function Sidebar({
+  profile,
+  collapsed,
+  onToggleCollapse,
+}: {
   profile: Profile | null;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
+  const router   = useRouter();
   const supabase = createClient();
   const [open, setOpen] = useState(false);
-  const w = collapsed ? 64 : 256;
+  const w = collapsed ? 64 : 260;
 
   const links = profile?.role === "trainer" ? trainerLinks : studentLinks;
 
@@ -57,129 +61,158 @@ export default function Sidebar({ profile, collapsed, onToggleCollapse }: {
 
   const SidebarContent = () => (
     <div style={{
-      width: w, height: "100vh", position: "fixed", top: 0, left: 0,
-      background: "var(--surface)", borderRight: "1px solid var(--border-subtle)",
-      display: "flex", flexDirection: "column", zIndex: 50,
-      transition: "width 0.25s ease",
+      width: w,
+      height: "100vh",
+      position: "fixed",
+      top: 0, left: 0,
+      background: "linear-gradient(180deg, #06080f 0%, #040509 100%)",
+      borderRight: "1px solid rgba(61,189,212,0.07)",
+      display: "flex",
+      flexDirection: "column",
+      zIndex: 50,
+      transition: "width 0.25s cubic-bezier(.4,0,.2,1)",
       overflow: "hidden",
     }}>
-      {/* Logo + collapse button */}
+
+      {/* Linha de brilho lateral direita */}
       <div style={{
-        padding: collapsed ? "20px 0" : "20px 16px",
-        borderBottom: "1px solid var(--border-subtle)",
-        display: "flex", alignItems: "center",
+        position: "absolute", top: 0, right: 0, bottom: 0, width: 1,
+        background: "linear-gradient(180deg, transparent, rgba(61,189,212,0.10) 30%, rgba(61,189,212,0.04) 70%, transparent)",
+        pointerEvents: "none",
+      }} />
+
+      {/* ── Brand / Logo ── */}
+      <div style={{
+        padding: collapsed ? "20px 0" : "16px 16px 14px",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
+        display: "flex",
+        alignItems: collapsed ? "center" : "flex-start",
         justifyContent: collapsed ? "center" : "space-between",
-        minHeight: 72,
+        minHeight: 82,
       }}>
         {collapsed ? (
-          <button onClick={onToggleCollapse} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }} title="Expandir">
-            <OFLogo size={32} color="#3DBDD4" />
+          <button onClick={onToggleCollapse} title="Expandir"
+            style={{ background: "none", border: "none", cursor: "pointer", display: "flex" }}>
+            <OFLogo size={26} color="#3DBDD4" />
           </button>
         ) : (
           <>
-            <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-              <OFLogo size={32} color="#3DBDD4" />
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)", letterSpacing: "0.3px", whiteSpace: "nowrap" }}>OTAVIO FONTES</div>
-                <div style={{ fontSize: 9, color: "var(--accent)", letterSpacing: "1px", textTransform: "uppercase", whiteSpace: "nowrap" }}>Personal & Consultoria</div>
+            <Link href="/dashboard" style={{ textDecoration: "none", flex: 1 }}>
+              {/* Mark */}
+              <OFLogo size={20} color="#3DBDD4" />
+              {/* OTAVIO FONTES */}
+              <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: "2.5px", marginTop: 7, lineHeight: 1 }}>
+                <span style={{ color: "#f0f4f8" }}>OTAVIO </span>
+                <span style={{ color: "#3DBDD4" }}>FONTES</span>
+              </div>
+              {/* Barra subline */}
+              <div style={{
+                display: "inline-block", marginTop: 5,
+                background: "#3DBDD4", color: "#000",
+                fontSize: 7.5, fontWeight: 800, letterSpacing: "1.3px",
+                padding: "3px 8px", borderRadius: 3, whiteSpace: "nowrap",
+              }}>
+                PERSONAL E CONSULTORIA-ON
               </div>
             </Link>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <button onClick={onToggleCollapse} title="Minimizar" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 4, borderRadius: 6, display: "flex", transition: "color 0.15s" }}
+
+            <div style={{ display: "flex", gap: 2, flexShrink: 0 }}>
+              <button onClick={onToggleCollapse} title="Minimizar"
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 4, borderRadius: 6, display: "flex", transition: "color 0.15s" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={15} />
               </button>
-              <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }} className="md:hidden">
-                <X size={20} />
+              <button onClick={() => setOpen(false)} className="md:hidden"
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 4, display: "flex" }}>
+                <X size={16} />
               </button>
             </div>
           </>
         )}
       </div>
 
-      {/* Role badge */}
+      {/* ── Role badge ── */}
       {!collapsed && (
-        <div style={{ padding: "10px 16px" }}>
+        <div style={{ padding: "10px 16px 4px" }}>
           <span style={{
-            fontSize: 11, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase",
-            color: "var(--accent)", background: "rgba(61,189,212,0.12)",
-            padding: "4px 10px", borderRadius: 6, whiteSpace: "nowrap",
+            fontSize: 9, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase",
+            color: "var(--accent)", border: "1px solid rgba(61,189,212,0.18)",
+            background: "rgba(61,189,212,0.06)", padding: "3px 9px", borderRadius: 5,
           }}>
             {profile?.role === "trainer" ? "Personal Trainer" : "Aluno"}
           </span>
         </div>
       )}
 
-      {/* Nav links */}
-      <nav style={{ flex: 1, padding: "8px 6px", display: "flex", flexDirection: "column", gap: 2, overflowY: "auto" }}>
+      {/* ── Nav ── */}
+      <nav style={{ flex: 1, padding: "10px 8px", display: "flex", flexDirection: "column", gap: 1, overflowY: "auto" }}>
         {links.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
           return (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setOpen(false)}
-              title={collapsed ? label : undefined}
+            <Link key={href} href={href} onClick={() => setOpen(false)} title={collapsed ? label : undefined}
               style={{
                 display: "flex", alignItems: "center",
-                gap: collapsed ? 0 : 12,
+                gap: collapsed ? 0 : 10,
                 justifyContent: collapsed ? "center" : "flex-start",
-                padding: collapsed ? "12px 0" : "10px 12px",
-                borderRadius: 10,
-                textDecoration: "none",
+                padding: collapsed ? "13px 0" : "10px 12px",
+                borderRadius: 9, textDecoration: "none",
                 color: active ? "var(--accent)" : "var(--text-secondary)",
-                background: active ? "rgba(61,189,212,0.15)" : "transparent",
-                fontWeight: active ? 600 : 400,
-                fontSize: 14,
+                background: active ? "rgba(61,189,212,0.08)" : "transparent",
+                fontWeight: active ? 700 : 400,
+                fontSize: 13,
                 transition: "all 0.15s",
                 borderLeft: !collapsed && active ? "2px solid var(--accent)" : "2px solid transparent",
               }}
-              onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "var(--surface-2)"; }}
+              onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
               onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
-              <Icon size={18} />
+              <Icon size={17} />
               {!collapsed && <span>{label}</span>}
-              {!collapsed && active && <ChevronRight size={14} style={{ marginLeft: "auto", opacity: 0.7 }} />}
+              {!collapsed && active && <ChevronRight size={12} style={{ marginLeft: "auto", opacity: 0.5 }} />}
             </Link>
           );
         })}
       </nav>
 
-      {/* Notifications */}
-      <div style={{ padding: "0 6px 8px" }}>
-        <Link href="/dashboard/notificacoes" title={collapsed ? "Notificacoes" : undefined} style={{
-          display: "flex", alignItems: "center",
-          gap: collapsed ? 0 : 12,
-          justifyContent: collapsed ? "center" : "flex-start",
-          padding: collapsed ? "12px 0" : "10px 12px",
-          borderRadius: 10,
-          textDecoration: "none", color: "var(--text-secondary)", fontSize: 14,
-          transition: "background 0.15s",
-        }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--surface-2)"; }}
+      {/* ── Notificações ── */}
+      <div style={{ padding: "0 8px 8px" }}>
+        <Link href="/dashboard/notificacoes" title={collapsed ? "Notificações" : undefined}
+          style={{
+            display: "flex", alignItems: "center",
+            gap: collapsed ? 0 : 10,
+            justifyContent: collapsed ? "center" : "flex-start",
+            padding: collapsed ? "13px 0" : "10px 12px",
+            borderRadius: 9, textDecoration: "none",
+            color: "var(--text-secondary)", fontSize: 13, transition: "background 0.15s",
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
         >
-          <Bell size={18} />
-          {!collapsed && <span>Notificacoes</span>}
+          <Bell size={17} />
+          {!collapsed && <span>Notificações</span>}
         </Link>
       </div>
 
-      {/* User + Logout */}
+      {/* Separador */}
+      <div style={{ height: 1, margin: "0 14px", background: "rgba(255,255,255,0.04)" }} />
+
+      {/* ── Usuário + Logout ── */}
       <div style={{
-        padding: collapsed ? "16px 0" : "16px 16px",
-        borderTop: "1px solid var(--border-subtle)",
+        padding: collapsed ? "14px 0" : "12px 14px",
         display: "flex", alignItems: "center",
         justifyContent: collapsed ? "center" : "flex-start",
         gap: 10,
       }}>
         <div style={{
           width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
-          background: "linear-gradient(135deg, var(--accent), var(--accent-dark))",
+          background: "linear-gradient(135deg, #3DBDD4, #2196ac)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 12, fontWeight: 700, color: "white",
-        }} title={collapsed ? (profile?.name || "Usuario") : undefined}>
+          fontSize: 12, fontWeight: 800, color: "#000",
+          border: "1px solid rgba(61,189,212,0.3)",
+          boxShadow: "0 0 12px rgba(61,189,212,0.15)",
+        }} title={collapsed ? (profile?.name || "Usuário") : undefined}>
           {profile?.avatar_url
             ? <img src={profile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
             : initials}
@@ -187,32 +220,21 @@ export default function Sidebar({ profile, collapsed, onToggleCollapse }: {
         {!collapsed && (
           <>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {profile?.name || "Usuario"}
+              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {profile?.name || "Usuário"}
               </div>
-              <div style={{ fontSize: 11, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <div style={{ fontSize: 10, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {profile?.email}
               </div>
             </div>
-            <button onClick={handleLogout} title="Sair" style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: "var(--text-muted)", padding: 4, borderRadius: 6,
-              transition: "color 0.15s", flexShrink: 0,
-            }}
+            <button onClick={handleLogout} title="Sair"
+              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 4, borderRadius: 6, display: "flex", transition: "color 0.15s", flexShrink: 0 }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--red)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}
             >
-              <LogOut size={16} />
+              <LogOut size={15} />
             </button>
           </>
-        )}
-        {collapsed && (
-          <button onClick={handleLogout} title="Sair" style={{
-            display: "none",
-            background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)",
-          }}>
-            <LogOut size={14} />
-          </button>
         )}
       </div>
     </div>
@@ -220,41 +242,42 @@ export default function Sidebar({ profile, collapsed, onToggleCollapse }: {
 
   return (
     <>
-      {/* Mobile header */}
+      {/* ── Mobile header ── */}
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, height: 56,
-        background: "var(--surface)", borderBottom: "1px solid var(--border-subtle)",
-        display: "flex", alignItems: "center", padding: "0 16px", gap: 12, zIndex: 40,
+        background: "rgba(4,5,9,0.92)",
+        backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(61,189,212,0.06)",
+        display: "flex", alignItems: "center", padding: "0 16px", gap: 14, zIndex: 40,
       }} className="md:hidden">
-        <button onClick={() => setOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-primary)" }}>
+        <button onClick={() => setOpen(true)}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-primary)", display: "flex" }}>
           <Menu size={22} />
         </button>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <OFLogo size={28} color="#3DBDD4" />
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)", letterSpacing: "0.3px" }}>OTAVIO FONTES</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <OFLogo size={16} color="#3DBDD4" />
+          <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: "2px" }}>
+            <span style={{ color: "#f0f4f8" }}>OTAVIO </span>
+            <span style={{ color: "#3DBDD4" }}>FONTES</span>
           </div>
         </div>
       </div>
 
-      {/* Desktop sidebar */}
+      {/* ── Desktop ── */}
       <div className="hidden md:block">
         <SidebarContent />
       </div>
 
-      {/* Mobile drawer */}
+      {/* ── Mobile drawer ── */}
       {open && (
         <>
-          <div onClick={() => setOpen(false)} style={{
-            position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 49,
-          }} />
-          <div style={{ transform: "translateX(0)" }}>
-            <SidebarContent />
-          </div>
+          <div onClick={() => setOpen(false)}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 49, backdropFilter: "blur(6px)" }} />
+          <div><SidebarContent /></div>
         </>
       )}
 
-      {/* Mobile top spacer */}
+      {/* Espaçador mobile */}
       <div style={{ height: 56 }} className="md:hidden" />
     </>
   );
