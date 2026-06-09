@@ -62,6 +62,12 @@ export default function AlunoDetailPage() {
   const [accessMsg, setAccessMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
+  /* ── Senha temporária ── */
+  const [tempPass, setTempPass] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [settingPass, setSettingPass] = useState(false);
+  const [passMsg, setPassMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
   /* ── Editar ficha ── */
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState("");
@@ -117,6 +123,35 @@ export default function AlunoDetailPage() {
       setLoading(false);
     })();
   }, [studentId]);
+
+  /* ── Definir senha temporária (Admin API) ── */
+  async function handleSetTempPass() {
+    if (!student?.id || tempPass.length < 6) return;
+    setSettingPass(true);
+    setPassMsg(null);
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sem sessão");
+
+      const res = await fetch("/api/admin/set-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ userId: student.id, password: tempPass }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      setPassMsg({ type: "ok", text: "Senha definida! Compartilhe com o aluno." });
+      setTempPass("");
+    } catch (e: any) {
+      setPassMsg({ type: "err", text: e?.message || "Erro ao definir senha" });
+    } finally {
+      setSettingPass(false);
+    }
+  }
 
   /* ── Reenviar acesso ── */
   async function handleSendAccess() {
@@ -535,6 +570,56 @@ export default function AlunoDetailPage() {
               }}>
                 {accessMsg.type === "ok" ? <CheckCircle size={13} /> : null}
                 {accessMsg.text}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Senha temporária */}
+        {isTrainer && student.id && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "1.5px", color: "var(--text-muted)", marginBottom: 8 }}>
+              DEFINIR SENHA TEMPORÁRIA
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ flex: 1, position: "relative" }}>
+                <input
+                  type={showPass ? "text" : "password"}
+                  value={tempPass}
+                  onChange={e => setTempPass(e.target.value)}
+                  placeholder="Mín. 6 caracteres"
+                  style={{
+                    width: "100%", background: "var(--surface-2)", border: "1px solid var(--border)",
+                    borderRadius: 10, padding: "10px 40px 10px 14px",
+                    color: "var(--text-primary)", fontSize: 13, outline: "none",
+                  }}
+                />
+                <button onClick={() => setShowPass(v => !v)}
+                  style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", display: "flex", fontSize: 11 }}>
+                  {showPass ? "ocultar" : "ver"}
+                </button>
+              </div>
+              <button onClick={handleSetTempPass} disabled={settingPass || tempPass.length < 6}
+                style={{
+                  padding: "10px 16px", borderRadius: 10, border: "none", cursor: tempPass.length >= 6 ? "pointer" : "not-allowed",
+                  background: tempPass.length >= 6 ? "var(--accent)" : "var(--surface-2)",
+                  color: tempPass.length >= 6 ? "#000" : "var(--text-muted)",
+                  fontWeight: 800, fontSize: 13, flexShrink: 0, display: "flex", alignItems: "center", gap: 6, transition: "all 0.15s",
+                }}>
+                {settingPass ? <Loader size={13} style={{ animation: "spin 0.8s linear infinite" }} /> : null}
+                {settingPass ? "..." : "Definir"}
+              </button>
+            </div>
+            {passMsg && (
+              <div style={{
+                marginTop: 8, padding: "10px 14px", borderRadius: 10, fontSize: 13,
+                background: passMsg.type === "ok" ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)",
+                border: `1px solid ${passMsg.type === "ok" ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}`,
+                color: passMsg.type === "ok" ? "var(--green)" : "#ef4444",
+                display: "flex", alignItems: "center", gap: 8,
+              }}>
+                {passMsg.type === "ok" ? <CheckCircle size={13} /> : null}
+                {passMsg.text}
               </div>
             )}
           </div>
