@@ -3,8 +3,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { userId, password } = body;
+    const { userId, password } = await req.json();
 
     if (!userId || !password) {
       return NextResponse.json({ error: "userId e password são obrigatórios" }, { status: 400 });
@@ -34,7 +33,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Token inválido ou sessão expirada" }, { status: 401 });
     }
 
-    // Admin client
+    // Admin client (service role)
     const admin = createSupabaseClient(url, svc, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -53,22 +52,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Apenas trainers podem redefinir senhas" }, { status: 403 });
     }
 
-    // Define a senha via Admin API
-    const { data: updatedUser, error: updateErr } = await admin.auth.admin.updateUserById(
-      userId,
-      { password }
-    );
+    // Atualiza senha via função SQL segura (bcrypt direto no banco)
+    const { error: rpcErr } = await admin.rpc("set_user_password", {
+      p_user_id: userId,
+      p_password: password,
+    });
 
-    if (updateErr) {
-      // Retorna o erro detalhado do Supabase para diagnóstico
-      return NextResponse.json(
-        { error: updateErr.message, code: (updateErr as any).code, status: (updateErr as any).status },
-        { status: 500 }
-      );
+    if (rpcErr) {
+      return NextResponse.json({ error: rpcErr.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, email: updatedUser.user?.email });
+    return NextResponse.json({ success: true });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "Erro desconhecido", stack: e?.stack?.slice(0, 200) }, { status: 500 });
+    return NextResponse.json({ error: e?.message || "Erro desconhecido" }, { status: 500 });
   }
 }
