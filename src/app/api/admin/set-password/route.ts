@@ -22,32 +22,43 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Admin client — valida token E faz a operação
     const adminClient = createSupabaseClient(url, svc, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Verifica se o chamador tem sessão válida
-    const authHeader = req.headers.get("Authorization");
-    const token = authHeader?.replace("Bearer ", "") ?? "";
+    // Extrai o caller ID diretamente do JWT (sem chamada extra ao Supabase Auth)
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace("Bearer ", "").trim();
+    let callerId: string | null = null;
 
-    const { data: { user: caller }, error: authErr } = await adminClient.auth.getUser(token);
-    if (authErr || !caller) {
-      return NextResponse.json({ error: "Sessão inválida" }, { status: 401 });
+    try {
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(
+          Buffer.from(parts[1], "base64url").toString("utf-8")
+        );
+        callerId = payload.sub ?? null;
+      }
+    } catch {
+      // token malformado
     }
 
-    // Verifica se o chamador é trainer
+    if (!callerId) {
+      return NextResponse.json({ error: "Token inválido ou sessão expirada" }, { status: 401 });
+    }
+
+    // Verifica no banco se o caller é trainer
     const { data: profile } = await adminClient
       .from("profiles")
       .select("role")
-      .eq("id", caller.id)
+      .eq("id", callerId)
       .single();
 
     if (profile?.role !== "trainer") {
       return NextResponse.json({ error: "Apenas trainers podem redefinir senhas" }, { status: 403 });
     }
 
-    // Define a senha diretamente
+    // Define a senha diretamente via Admin API
     const { error } = await adminClient.auth.admin.updateUserById(userId, { password });
     if (error) throw error;
 
