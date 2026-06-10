@@ -3,7 +3,8 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, password } = await req.json();
+    const body = await req.json();
+    const { userId, password } = body;
 
     if (!userId || !password) {
       return NextResponse.json({ error: "userId e password são obrigatórios" }, { status: 400 });
@@ -12,58 +13,62 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Senha deve ter pelo menos 6 caracteres" }, { status: 400 });
     }
 
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const svc = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!svc) {
-      return NextResponse.json(
-        { error: "Servidor não configurado (SUPABASE_SERVICE_ROLE_KEY ausente)" },
-        { status: 503 }
-      );
-    }
+    if (!url) return NextResponse.json({ error: "NEXT_PUBLIC_SUPABASE_URL ausente" }, { status: 503 });
+    if (!svc) return NextResponse.json({ error: "SUPABASE_SERVICE_ROLE_KEY ausente" }, { status: 503 });
 
-    const adminClient = createSupabaseClient(url, svc, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
-    // Extrai o caller ID diretamente do JWT (sem chamada extra ao Supabase Auth)
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const token = authHeader.replace("Bearer ", "").trim();
+    // Decodifica JWT para obter caller ID
+    const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "").trim();
     let callerId: string | null = null;
-
     try {
       const parts = token.split(".");
       if (parts.length === 3) {
-        const payload = JSON.parse(
-          Buffer.from(parts[1], "base64url").toString("utf-8")
-        );
+        const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8"));
         callerId = payload.sub ?? null;
       }
-    } catch {
-      // token malformado
-    }
+    } catch { /* token malformado */ }
 
     if (!callerId) {
       return NextResponse.json({ error: "Token inválido ou sessão expirada" }, { status: 401 });
     }
 
-    // Verifica no banco se o caller é trainer
-    const { data: profile } = await adminClient
+    // Admin client
+    const admin = createSupabaseClient(url, svc, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    // Verifica se caller é trainer
+    const { data: profile, error: profileErr } = await admin
       .from("profiles")
       .select("role")
       .eq("id", callerId)
       .single();
 
+    if (profileErr) {
+      return NextResponse.json({ error: `Erro ao buscar perfil: ${profileErr.message}` }, { status: 500 });
+    }
     if (profile?.role !== "trainer") {
       return NextResponse.json({ error: "Apenas trainers podem redefinir senhas" }, { status: 403 });
     }
 
-    // Define a senha diretamente via Admin API
-    const { error } = await adminClient.auth.admin.updateUserById(userId, { password });
-    if (error) throw error;
+    // Define a senha via Admin API
+    const { data: updatedUser, error: updateErr } = await admin.auth.admin.updateUserById(
+      userId,
+      { password }
+    );
 
-    return NextResponse.json({ success: true });
+    if (updateErr) {
+      // Retorna o erro detalhado do Supabase para diagnóstico
+      return NextResponse.json(
+        { error: updateErr.message, code: (updateErr as any).code, status: (updateErr as any).status },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true, email: updatedUser.user?.email });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "Erro ao definir senha" }, { status: 500 });
+    return NextResponse.json({ error: e?.message || "Erro desconhecido", stack: e?.stack?.slice(0, 200) }, { status: 500 });
   }
 }
