@@ -542,34 +542,33 @@ export default function AlunoDetailPage() {
           </div>
         )}
 
-        {/* Botão Reenviar Acesso */}
+        {/* Reenviar Acesso — disponível mas secundário */}
         {isTrainer && student.email && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 12 }}>
             <button onClick={handleSendAccess} disabled={sendingAccess}
               style={{
-                width: "100%", borderRadius: 12, padding: "12px 16px",
-                background: sendingAccess ? "rgba(61,189,212,0.05)" : "rgba(61,189,212,0.08)",
-                border: "1px solid rgba(61,189,212,0.2)",
+                width: "100%", borderRadius: 10, padding: "10px 16px",
+                background: "transparent",
+                border: "1px solid rgba(61,189,212,0.12)",
                 cursor: sendingAccess ? "not-allowed" : "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                color: "var(--accent)", fontSize: 13, fontWeight: 700, transition: "all 0.15s",
+                color: "rgba(61,189,212,0.5)", fontSize: 12, fontWeight: 600, transition: "all 0.15s",
               }}
-              onMouseEnter={e => { if (!sendingAccess) (e.currentTarget as HTMLElement).style.background = "rgba(61,189,212,0.14)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(61,189,212,0.08)"; }}
+              onMouseEnter={e => { if (!sendingAccess) { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(61,189,212,0.3)"; }}}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(61,189,212,0.5)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(61,189,212,0.12)"; }}
             >
-              <KeyRound size={14} />
-              {sendingAccess ? "Enviando..." : "Reenviar Acesso por Email"}
+              <KeyRound size={13} />
+              {sendingAccess ? "Enviando..." : "Enviar link de redefinição por email"}
             </button>
             {accessMsg && (
               <div style={{
-                marginTop: 8, padding: "10px 14px", borderRadius: 10, fontSize: 13,
+                marginTop: 6, padding: "8px 12px", borderRadius: 8, fontSize: 12,
                 background: accessMsg.type === "ok" ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)",
                 border: `1px solid ${accessMsg.type === "ok" ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}`,
                 color: accessMsg.type === "ok" ? "var(--green)" : "#ef4444",
-                display: "flex", alignItems: "center", gap: 8,
               }}>
-                {accessMsg.type === "ok" ? <CheckCircle size={13} /> : null}
-                {accessMsg.text}
+                {accessMsg.type === "ok" ? "✓ " : "⚠ "}{accessMsg.text}
+                {accessMsg.type === "err" && <span style={{ opacity: 0.7 }}> — Use a senha temporária abaixo.</span>}
               </div>
             )}
           </div>

@@ -12,43 +12,42 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Senha deve ter pelo menos 6 caracteres" }, { status: 400 });
     }
 
-    // Verifica token do trainer no header
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-    }
-    const token = authHeader.replace("Bearer ", "");
-
-    const url  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const svc  = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const svc = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!svc) {
-      return NextResponse.json({ error: "Servidor não configurado (SUPABASE_SERVICE_ROLE_KEY ausente)" }, { status: 503 });
+      return NextResponse.json(
+        { error: "Servidor não configurado (SUPABASE_SERVICE_ROLE_KEY ausente)" },
+        { status: 503 }
+      );
     }
 
-    // Valida sessão e perfil do chamador
-    const regularClient = createSupabaseClient(url, anon, { auth: { persistSession: false } });
-    const { data: { user }, error: authErr } = await regularClient.auth.getUser(token);
-    if (authErr || !user) {
+    // Admin client — valida token E faz a operação
+    const adminClient = createSupabaseClient(url, svc, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    // Verifica se o chamador tem sessão válida
+    const authHeader = req.headers.get("Authorization");
+    const token = authHeader?.replace("Bearer ", "") ?? "";
+
+    const { data: { user: caller }, error: authErr } = await adminClient.auth.getUser(token);
+    if (authErr || !caller) {
       return NextResponse.json({ error: "Sessão inválida" }, { status: 401 });
     }
 
-    const { data: profile } = await regularClient
+    // Verifica se o chamador é trainer
+    const { data: profile } = await adminClient
       .from("profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("id", caller.id)
       .single();
 
     if (profile?.role !== "trainer") {
       return NextResponse.json({ error: "Apenas trainers podem redefinir senhas" }, { status: 403 });
     }
 
-    // Admin: define a senha diretamente
-    const adminClient = createSupabaseClient(url, svc, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
+    // Define a senha diretamente
     const { error } = await adminClient.auth.admin.updateUserById(userId, { password });
     if (error) throw error;
 
