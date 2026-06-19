@@ -671,13 +671,13 @@ export default function AlunoDetailPage() {
                 {/* Botões de ação */}
                 {isTrainer && (
                   <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                    <button onClick={openEditModal} title="Editar ficha"
-                      style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 8, background: "rgba(61,189,212,0.06)", border: "1px solid rgba(61,189,212,0.15)", cursor: "pointer", color: "var(--accent)", fontSize: 12, fontWeight: 600, transition: "all 0.15s" }}
+                    <Link href={`/dashboard/alunos/${studentId}/ficha/${activePlan.id}/editar`}
+                      style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 8, background: "rgba(61,189,212,0.06)", border: "1px solid rgba(61,189,212,0.15)", cursor: "pointer", color: "var(--accent)", fontSize: 12, fontWeight: 600, transition: "all 0.15s", textDecoration: "none" }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(61,189,212,0.12)"}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(61,189,212,0.06)"}
                     >
                       <Edit2 size={12} /> Editar
-                    </button>
+                    </Link>
                     <button onClick={openCloneModal} title="Clonar para outro aluno"
                       style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 8, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.15)", cursor: "pointer", color: "#60a5fa", fontSize: 12, fontWeight: 600, transition: "all 0.15s" }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.12)"}
