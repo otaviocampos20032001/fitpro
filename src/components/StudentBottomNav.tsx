@@ -1,14 +1,14 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Dumbbell, ClipboardCheck, TrendingUp, User } from "lucide-react";
+import { Home, ClipboardList, Activity, BarChart2, User } from "lucide-react";
 
 const TABS = [
-  { href: "/dashboard",           label: "INÍCIO",    Icon: Home },
-  { href: "/dashboard/treino",    label: "TREINOS",   Icon: Dumbbell },
-  { href: "/dashboard/checkin",   label: "CHECK-IN",  Icon: ClipboardCheck },
-  { href: "/dashboard/evolucao",  label: "EVOLUÇÃO",  Icon: TrendingUp },
-  { href: "/dashboard/perfil",    label: "PERFIL",    Icon: User },
+  { href: "/dashboard",           label: "Início",      Icon: Home },
+  { href: "/dashboard/treino",    label: "Protocolo",   Icon: ClipboardList },
+  { href: "/dashboard/checkin",   label: "Check-ins",   Icon: Activity },
+  { href: "/dashboard/evolucao",  label: "Desempenho",  Icon: BarChart2 },
+  { href: "/dashboard/perfil",    label: "Perfil",      Icon: User },
 ];
 
 export default function StudentBottomNav() {
@@ -18,9 +18,9 @@ export default function StudentBottomNav() {
     <nav style={{
       position: "fixed",
       bottom: 0, left: 0, right: 0,
-      background: "rgba(6,9,18,0.96)",
-      backdropFilter: "blur(24px)",
-      borderTop: "1px solid rgba(61,189,212,0.08)",
+      background: "rgba(5,8,15,0.97)",
+      backdropFilter: "blur(28px)",
+      borderTop: "1px solid rgba(0,196,245,0.07)",
       display: "flex",
       zIndex: 200,
       paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -33,25 +33,25 @@ export default function StudentBottomNav() {
           <Link key={href} href={href} style={{
             flex: 1, display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center",
-            gap: 5, padding: "10px 4px 8px",
+            gap: 5, padding: "10px 4px 9px",
             textDecoration: "none", position: "relative",
-            color: active ? "#3DBDD4" : "rgba(255,255,255,0.3)",
+            color: active ? "#00C4F5" : "rgba(255,255,255,0.28)",
             transition: "color 0.2s",
           }}>
-            {/* Active top bar */}
+            {/* Active indicator bar */}
             {active && (
               <span style={{
                 position: "absolute", top: 0, left: "50%",
                 transform: "translateX(-50%)",
-                width: 28, height: 2, borderRadius: 2,
-                background: "linear-gradient(90deg, #3DBDD4, #1ab0ff)",
-                boxShadow: "0 0 8px rgba(61,189,212,0.6)",
+                width: 24, height: 2, borderRadius: 2,
+                background: "linear-gradient(90deg, #00C4F5, #0099cc)",
+                boxShadow: "0 0 10px rgba(0,196,245,0.7)",
               }} />
             )}
             <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
             <span style={{
-              fontSize: 9, fontWeight: active ? 700 : 500,
-              letterSpacing: "0.6px",
+              fontSize: 9.5, fontWeight: active ? 700 : 500,
+              letterSpacing: "0.2px",
             }}>
               {label}
             </span>
