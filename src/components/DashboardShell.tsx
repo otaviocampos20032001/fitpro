@@ -49,21 +49,23 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           position: "fixed", top: 0, left: 0, right: 0, height: 64, zIndex: 100,
           background: "rgba(6,9,18,0.95)",
           backdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(61,189,212,0.07)",
+          borderBottom: "1px solid rgba(0,196,245,0.07)",
           display: "flex", alignItems: "center",
           padding: "0 20px",
           justifyContent: "space-between",
         }}>
           {/* Brand */}
-          <Link href="/dashboard" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
-            <OFLogo size={22} color="#3DBDD4" />
+          <Link href="/dashboard" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ filter: "drop-shadow(0 0 10px rgba(0,196,245,0.45))" }}>
+              <OFLogo size={22} color="#00C4F5" />
+            </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: "2px", lineHeight: 1 }}>
-                <span style={{ color: "#f0f4f8" }}>OTÁVIO </span>
-                <span style={{ color: "#3DBDD4" }}>FONTES</span>
+              <div style={{ fontSize: 16, fontWeight: 900, letterSpacing: "-0.3px", lineHeight: 1 }}>
+                <span style={{ color: "#00C4F5" }}>OF</span>
+                <span style={{ color: "#f0f4f8", fontStyle: "italic" }}>it</span>
               </div>
-              <div style={{ fontSize: 7.5, fontWeight: 800, letterSpacing: "1.2px", color: "rgba(61,189,212,0.7)", marginTop: 2 }}>
-                PERSONAL E CONSULTORIA · ON
+              <div style={{ fontSize: 7.5, fontWeight: 800, letterSpacing: "1.5px", color: "rgba(0,196,245,0.55)", marginTop: 2 }}>
+                HUMAN PERFORMANCE SYSTEM
               </div>
             </div>
           </Link>
@@ -75,14 +77,14 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             </button>
             <Link href="/dashboard/perfil" style={{ textDecoration: "none" }}>
               {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(61,189,212,0.3)" }} />
+                <img src={profile.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(0,196,245,0.3)" }} />
               ) : (
                 <div style={{
                   width: 36, height: 36, borderRadius: "50%",
-                  background: "linear-gradient(135deg, #3DBDD4, #2196ac)",
+                  background: "linear-gradient(135deg, #00C4F5, #0099cc)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 13, fontWeight: 800, color: "#000",
-                  border: "2px solid rgba(61,189,212,0.3)",
+                  border: "2px solid rgba(0,196,245,0.3)",
                 }}>
                   {profile?.name?.charAt(0).toUpperCase() ?? <User size={16} />}
                 </div>

@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Otavio Fontes | Personal e Consultoria-ON",
-  description: "Plataforma de treinos personalizados — Otavio Fontes Personal e Consultoria-ON",
+  title: "OFit | Human Performance System",
+  description: "OFit — Ciência. Performance. Resultados.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "OF Personal",
+    title: "OFit",
   },
 };
 

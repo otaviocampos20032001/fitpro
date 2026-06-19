@@ -66,7 +66,7 @@ export default function Sidebar({
       position: "fixed",
       top: 0, left: 0,
       background: "linear-gradient(180deg, #06080f 0%, #040509 100%)",
-      borderRight: "1px solid rgba(61,189,212,0.07)",
+      borderRight: "1px solid rgba(0,196,245,0.07)",
       display: "flex",
       flexDirection: "column",
       zIndex: 50,
@@ -77,7 +77,7 @@ export default function Sidebar({
       {/* Linha de brilho lateral direita */}
       <div style={{
         position: "absolute", top: 0, right: 0, bottom: 0, width: 1,
-        background: "linear-gradient(180deg, transparent, rgba(61,189,212,0.10) 30%, rgba(61,189,212,0.04) 70%, transparent)",
+        background: "linear-gradient(180deg, transparent, rgba(0,196,245,0.10) 30%, rgba(0,196,245,0.04) 70%, transparent)",
         pointerEvents: "none",
       }} />
 
@@ -93,26 +93,30 @@ export default function Sidebar({
         {collapsed ? (
           <button onClick={onToggleCollapse} title="Expandir"
             style={{ background: "none", border: "none", cursor: "pointer", display: "flex" }}>
-            <OFLogo size={26} color="#3DBDD4" />
+            <div style={{ filter: "drop-shadow(0 0 8px rgba(0,196,245,0.45))" }}>
+              <OFLogo size={26} color="#00C4F5" />
+            </div>
           </button>
         ) : (
           <>
             <Link href="/dashboard" style={{ textDecoration: "none", flex: 1 }}>
               {/* Mark */}
-              <OFLogo size={20} color="#3DBDD4" />
-              {/* OTAVIO FONTES */}
-              <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: "2.5px", marginTop: 7, lineHeight: 1 }}>
-                <span style={{ color: "#f0f4f8" }}>OTAVIO </span>
-                <span style={{ color: "#3DBDD4" }}>FONTES</span>
+              <div style={{ filter: "drop-shadow(0 0 8px rgba(0,196,245,0.4))", display: "inline-block" }}>
+                <OFLogo size={20} color="#00C4F5" />
               </div>
-              {/* Barra subline */}
+              {/* OFit */}
+              <div style={{ fontSize: 16, fontWeight: 900, letterSpacing: "-0.3px", marginTop: 7, lineHeight: 1 }}>
+                <span style={{ color: "#00C4F5" }}>OF</span>
+                <span style={{ color: "#f0f4f8", fontStyle: "italic" }}>it</span>
+              </div>
+              {/* Badge */}
               <div style={{
                 display: "inline-block", marginTop: 5,
-                background: "#3DBDD4", color: "#000",
+                background: "#00C4F5", color: "#000",
                 fontSize: 7.5, fontWeight: 800, letterSpacing: "1.3px",
                 padding: "3px 8px", borderRadius: 3, whiteSpace: "nowrap",
               }}>
-                PERSONAL E CONSULTORIA-ON
+                HUMAN PERFORMANCE SYSTEM
               </div>
             </Link>
 
@@ -138,8 +142,8 @@ export default function Sidebar({
         <div style={{ padding: "10px 16px 4px" }}>
           <span style={{
             fontSize: 9, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase",
-            color: "var(--accent)", border: "1px solid rgba(61,189,212,0.18)",
-            background: "rgba(61,189,212,0.06)", padding: "3px 9px", borderRadius: 5,
+            color: "var(--accent)", border: "1px solid rgba(0,196,245,0.18)",
+            background: "rgba(0,196,245,0.06)", padding: "3px 9px", borderRadius: 5,
           }}>
             {profile?.role === "trainer" ? "Personal Trainer" : "Aluno"}
           </span>
@@ -159,7 +163,7 @@ export default function Sidebar({
                 padding: collapsed ? "13px 0" : "10px 12px",
                 borderRadius: 9, textDecoration: "none",
                 color: active ? "var(--accent)" : "var(--text-secondary)",
-                background: active ? "rgba(61,189,212,0.08)" : "transparent",
+                background: active ? "rgba(0,196,245,0.08)" : "transparent",
                 fontWeight: active ? 700 : 400,
                 fontSize: 13,
                 transition: "all 0.15s",
@@ -207,11 +211,11 @@ export default function Sidebar({
       }}>
         <div style={{
           width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
-          background: "linear-gradient(135deg, #3DBDD4, #2196ac)",
+          background: "linear-gradient(135deg, #00C4F5, #0099cc)",
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 12, fontWeight: 800, color: "#000",
-          border: "1px solid rgba(61,189,212,0.3)",
-          boxShadow: "0 0 12px rgba(61,189,212,0.15)",
+          border: "1px solid rgba(0,196,245,0.3)",
+          boxShadow: "0 0 12px rgba(0,196,245,0.15)",
         }} title={collapsed ? (profile?.name || "Usuário") : undefined}>
           {profile?.avatar_url
             ? <img src={profile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
@@ -247,18 +251,20 @@ export default function Sidebar({
         position: "fixed", top: 0, left: 0, right: 0, height: 56,
         background: "rgba(4,5,9,0.92)",
         backdropFilter: "blur(20px)",
-        borderBottom: "1px solid rgba(61,189,212,0.06)",
+        borderBottom: "1px solid rgba(0,196,245,0.06)",
         display: "flex", alignItems: "center", padding: "0 16px", gap: 14, zIndex: 40,
       }} className="md:hidden">
         <button onClick={() => setOpen(true)}
           style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-primary)", display: "flex" }}>
           <Menu size={22} />
         </button>
-        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <OFLogo size={16} color="#3DBDD4" />
-          <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: "2px" }}>
-            <span style={{ color: "#f0f4f8" }}>OTAVIO </span>
-            <span style={{ color: "#3DBDD4" }}>FONTES</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ filter: "drop-shadow(0 0 6px rgba(0,196,245,0.4))" }}>
+            <OFLogo size={16} color="#00C4F5" />
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 900, letterSpacing: "-0.2px", lineHeight: 1 }}>
+            <span style={{ color: "#00C4F5" }}>OF</span>
+            <span style={{ color: "#f0f4f8", fontStyle: "italic" }}>it</span>
           </div>
         </div>
       </div>
