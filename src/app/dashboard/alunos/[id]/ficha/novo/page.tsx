@@ -163,9 +163,14 @@ export default function NovaFichaPage() {
   useEffect(() => {
     const supabase = createClient();
     (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user.id;
       const [sr, er] = await Promise.all([
         (supabase.from("profiles") as any).select("name, goal").eq("id", studentId).single(),
-        (supabase.from("exercises") as any).select("id, name, muscle_groups").eq("is_public", true).order("name"),
+        (supabase.from("exercises") as any)
+          .select("id, name, muscle_groups, video_url")
+          .or(userId ? `is_public.eq.true,created_by.eq.${userId}` : "is_public.eq.true")
+          .order("name"),
       ]);
       setStudent(sr.data);
       setExercises(er.data || []);

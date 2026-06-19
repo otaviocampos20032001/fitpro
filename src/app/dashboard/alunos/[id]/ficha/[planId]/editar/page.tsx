@@ -1,16 +1,17 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Plus, Save, Trash2, Edit2, GripVertical,
-  ChevronDown, ChevronUp, X, Loader, Check, Dumbbell,
+  ChevronDown, ChevronUp, X, Loader, Check, Dumbbell, Search,
 } from "lucide-react";
 
 /* ─── types ─── */
+type LibraryEx = { id: string; name: string; muscle_groups?: string[]; video_url?: string };
 type PrescribedEx = {
-  id: string; exercise_name: string; muscle_group?: string;
+  id: string; exercise_id?: string | null; exercise_name: string; muscle_group?: string;
   method?: string; sets?: number; measure_type?: string; reps?: string;
   load_kg?: number; rest_seconds?: number; cadence?: string;
   technique_note?: string; order_index: number;
@@ -47,13 +48,67 @@ const MEASURE_TYPES = [
 ];
 
 const emptyEx = (): Omit<PrescribedEx, "id" | "order_index"> => ({
-  exercise_name: "", muscle_group: "", method: "normal",
+  exercise_id: null, exercise_name: "", muscle_group: "", method: "normal",
   sets: undefined, measure_type: "reps", reps: "",
   load_kg: undefined, rest_seconds: undefined, cadence: "", technique_note: "",
 });
 const emptyDay = () => ({
   day_letter: "", name: "", suggested_weekdays: [] as string[], day_notes: "",
 });
+
+/* ── ExercisePicker ── */
+function ExercisePicker({ value, exercises, onChange, inputStyle }: {
+  value: string;
+  exercises: LibraryEx[];
+  onChange: (name: string, id: string | null, group: string) => void;
+  inputStyle: React.CSSProperties;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState(value);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => { setQ(value); }, [value]);
+  useEffect(() => {
+    function onDown(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, []);
+  const filtered = q.length > 0 ? exercises.filter(ex => ex.name.toLowerCase().includes(q.toLowerCase())).slice(0, 8) : exercises.slice(0, 8);
+  const hasExact = filtered.some(ex => ex.name.toLowerCase() === q.toLowerCase());
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <div style={{ position: "relative" }}>
+        <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", pointerEvents: "none" }} />
+        <input value={q} onChange={e => { setQ(e.target.value); setOpen(true); onChange(e.target.value, null, ""); }}
+          onFocus={() => setOpen(true)}
+          placeholder="Buscar ou digitar exercício..."
+          style={{ ...inputStyle, paddingLeft: 30, width: "100%" }} />
+      </div>
+      {open && (
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 300, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.5)", maxHeight: 240, overflowY: "auto" }}>
+          {filtered.map(ex => (
+            <button key={ex.id} type="button"
+              onClick={() => { onChange(ex.name, ex.id, (ex.muscle_groups || [])[0] || ""); setQ(ex.name); setOpen(false); }}
+              style={{ width: "100%", textAlign: "left", background: "none", border: "none", borderBottom: "1px solid var(--border-subtle)", padding: "9px 12px", cursor: "pointer" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--surface-2)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; }}>
+              <div style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 500, display: "flex", alignItems: "center", gap: 6 }}>
+                {ex.name}
+                {ex.video_url && <span style={{ fontSize: 10, color: "var(--accent)", background: "rgba(61,189,212,0.12)", borderRadius: 4, padding: "1px 5px", fontWeight: 700 }}>▶ VÍD</span>}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>{(ex.muscle_groups || []).join(" · ")}</div>
+            </button>
+          ))}
+          {!hasExact && q.length > 1 && (
+            <button type="button" onClick={() => { onChange(q, null, ""); setOpen(false); }}
+              style={{ width: "100%", textAlign: "left", background: "none", border: "none", padding: "9px 12px", cursor: "pointer", color: "var(--accent)", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+              <Plus size={13} /> Personalizado: &ldquo;{q}&rdquo;
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ════════════════════════════════════════ */
 export default function EditarFichaPage() {
@@ -66,6 +121,7 @@ export default function EditarFichaPage() {
   const [days, setDays] = useState<Day[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+  const [libraryExs, setLibraryExs] = useState<LibraryEx[]>([]);
 
   /* plan meta editing */
   const [planName, setPlanName] = useState("");
@@ -88,20 +144,26 @@ export default function EditarFichaPage() {
   /* ── load ── */
   const load = useCallback(async () => {
     const supabase = createClient();
-    const { data: planData } = await (supabase.from("workout_plans") as any)
-      .select("id, name, goal, student_id")
-      .eq("id", planId)
-      .single();
-    if (!planData) { router.push(`/dashboard/alunos/${studentId}`); return; }
-    setPlan(planData);
-    setPlanName(planData.name);
-    setPlanGoal(planData.goal || "");
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user.id;
 
-    const { data: daysData } = await (supabase.from("workout_days") as any)
-      .select("*, prescribed_exercises(*)")
-      .eq("plan_id", planId)
-      .order("order_index", { ascending: true });
-    setDays(daysData || []);
+    const [planRes, daysRes, exRes] = await Promise.all([
+      (supabase.from("workout_plans") as any)
+        .select("id, name, goal, student_id").eq("id", planId).single(),
+      (supabase.from("workout_days") as any)
+        .select("*, prescribed_exercises(*)")
+        .eq("plan_id", planId).order("order_index", { ascending: true }),
+      (supabase.from("exercises") as any)
+        .select("id, name, muscle_groups, video_url")
+        .or(userId ? `is_public.eq.true,created_by.eq.${userId}` : "is_public.eq.true")
+        .order("name"),
+    ]);
+    if (!planRes.data) { router.push(`/dashboard/alunos/${studentId}`); return; }
+    setPlan(planRes.data);
+    setPlanName(planRes.data.name);
+    setPlanGoal(planRes.data.goal || "");
+    setDays(daysRes.data || []);
+    setLibraryExs(exRes.data || []);
     setLoading(false);
   }, [planId, studentId, router]);
 
@@ -203,6 +265,7 @@ export default function EditarFichaPage() {
   }
   function openEditEx(dayId: string, ex: PrescribedEx) {
     setExForm({
+      exercise_id: ex.exercise_id || null,
       exercise_name: ex.exercise_name,
       muscle_group: ex.muscle_group || "",
       method: ex.method || "normal",
@@ -224,6 +287,7 @@ export default function EditarFichaPage() {
     const supabase = createClient();
     try {
       const payload = {
+        exercise_id: exForm.exercise_id || null,
         exercise_name: exForm.exercise_name.trim(),
         muscle_group: exForm.muscle_group?.trim() || null,
         method: exForm.method || "normal",
@@ -365,13 +429,20 @@ export default function EditarFichaPage() {
 
             {/* Nome + Grupo muscular */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
-              <label style={{ gridColumn: "1 / -1" }}>
+              <div style={{ gridColumn: "1 / -1" }}>
                 <div style={labelStyle}>NOME DO EXERCÍCIO *</div>
-                <input value={exForm.exercise_name}
-                  onChange={e => setExForm(p => ({ ...p, exercise_name: e.target.value }))}
-                  placeholder="Ex: Supino Reto com Barra"
-                  style={{ ...inputStyle, width: "100%" }} />
-              </label>
+                <ExercisePicker
+                  value={exForm.exercise_name}
+                  exercises={libraryExs}
+                  onChange={(name, id, group) => setExForm(p => ({
+                    ...p,
+                    exercise_name: name,
+                    exercise_id: id,
+                    muscle_group: p.muscle_group || group,
+                  }))}
+                  inputStyle={inputStyle}
+                />
+              </div>
               <label>
                 <div style={labelStyle}>GRUPO MUSCULAR</div>
                 <input value={exForm.muscle_group || ""}

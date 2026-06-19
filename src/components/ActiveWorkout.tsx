@@ -7,17 +7,20 @@ import {
   Trophy, Plus, Minus, X, CheckCircle2, Dumbbell,
 } from "lucide-react";
 
-interface Exercise {
-  id: string; name: string; muscle_groups?: string[]; equipment?: string;
+interface LinkedExercise {
+  name: string; muscle_groups?: string[]; video_url?: string;
 }
 interface DayExercise {
-  id: string; exercise_id: string; sets: number; reps: string; rest_seconds: number;
-  notes?: string; target_weight?: number; order_index: number;
-  exercises: Exercise;
+  id: string; exercise_id?: string | null; exercise_name: string;
+  muscle_group?: string; method?: string;
+  sets?: number; measure_type?: string; reps?: string;
+  load_kg?: number; rest_seconds?: number; cadence?: string;
+  technique_note?: string; order_index: number;
+  exercises?: LinkedExercise;
 }
 interface WorkoutDay {
-  id: string; name: string; order_index: number;
-  workout_day_exercises: DayExercise[];
+  id: string; name: string; day_letter?: string; order_index: number;
+  prescribed_exercises: DayExercise[];
 }
 interface Plan { id: string; name: string; workout_days: WorkoutDay[]; }
 interface PR { exercise_id: string; weight?: number; reps?: number; }
@@ -48,16 +51,16 @@ export default function ActiveWorkout({
 
   const days = plan?.workout_days?.sort((a, b) => a.order_index - b.order_index) || [];
   const currentDay = days[selectedDayIndex];
-  const exercises = currentDay?.workout_day_exercises?.sort((a, b) => a.order_index - b.order_index) || [];
+  const exercises = currentDay?.prescribed_exercises?.sort((a, b) => a.order_index - b.order_index) || [];
 
   // Initialize logs when day changes
   useEffect(() => {
     if (!currentDay) return;
     const initial: ExerciseLogs = {};
     for (const de of exercises) {
-      initial[de.id] = Array.from({ length: de.sets }, () => ({
-        reps: parseInt(de.reps) || 10,
-        weight: de.target_weight || 0,
+      initial[de.id] = Array.from({ length: de.sets || 3 }, () => ({
+        reps: parseInt(de.reps || "10") || 10,
+        weight: de.load_kg || 0,
         done: false,
         isPR: false,
       }));
@@ -107,13 +110,14 @@ export default function ActiveWorkout({
       if (set.done) {
         // Check PR
         const de = exercises.find((e) => e.id === deId);
-        if (de) {
+        if (de && de.exercise_id) {
           const pr = prs.find((p) => p.exercise_id === de.exercise_id);
           const prWeight = pr?.weight || 0;
           if (set.weight > prWeight && set.weight > 0) {
             set.isPR = true;
-            setNewPRs((n) => [...n, de.exercises.name]);
-            setTimeout(() => setNewPRs((n) => n.filter((x) => x !== de.exercises.name)), 3000);
+            const exName = de.exercises?.name || de.exercise_name;
+            setNewPRs((n) => [...n, exName]);
+            setTimeout(() => setNewPRs((n) => n.filter((x) => x !== exName)), 3000);
           }
         }
 
@@ -171,13 +175,13 @@ export default function ActiveWorkout({
           if (s.done) {
             setsToInsert.push({
               session_id: sessionId,
-              exercise_id: de.exercise_id,
+              exercise_id: de.exercise_id || null,
               set_number: i + 1,
               reps: s.reps,
               weight: s.weight,
               is_pr: s.isPR,
             });
-            if (s.isPR && s.weight > 0) {
+            if (s.isPR && s.weight > 0 && de.exercise_id) {
               const oneRepMax = s.weight * (1 + s.reps / 30);
               await (supabase.from("personal_records") as any).upsert({
                 student_id: studentId,
@@ -388,11 +392,12 @@ export default function ActiveWorkout({
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: allDone ? "var(--green)" : "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {de.exercises.name}
+                    {de.exercises?.name || de.exercise_name}
                   </div>
                   <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
-                    {sets.length} séries × {de.reps} reps
+                    {sets.length} séries × {de.reps} {de.measure_type === "tempo" ? "s" : de.measure_type === "distancia" ? "m" : "reps"}
                     {de.rest_seconds ? ` · ${de.rest_seconds}s descanso` : ""}
+                    {de.method && de.method !== "normal" ? ` · ${de.method}` : ""}
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -406,6 +411,21 @@ export default function ActiveWorkout({
               {/* Sets */}
               {isExpanded && (
                 <div style={{ padding: "0 20px 16px", borderTop: "1px solid var(--border-subtle)" }}>
+                  {/* Vídeo do exercício */}
+                  {de.exercises?.video_url && (
+                    <video
+                      src={de.exercises.video_url}
+                      controls
+                      playsInline
+                      style={{ width: "100%", borderRadius: 10, marginTop: 12, marginBottom: 4, maxHeight: 220, background: "#000" }}
+                    />
+                  )}
+                  {/* Observações de técnica */}
+                  {de.technique_note && (
+                    <div style={{ fontSize: 12, color: "var(--text-secondary)", background: "var(--surface-2)", borderRadius: 8, padding: "8px 12px", marginTop: 8, marginBottom: 4 }}>
+                      💡 {de.technique_note}
+                    </div>
+                  )}
                   {/* Header */}
                   <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 1fr auto", gap: 8, padding: "10px 0 8px", alignItems: "center" }}>
                     <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600 }}>SET</span>
